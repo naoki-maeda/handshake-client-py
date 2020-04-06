@@ -8,6 +8,7 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.8"
 requests = "^2.23.0"
+python-bitcoinrpc = "^1.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.770"
