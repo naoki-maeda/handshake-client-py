@@ -4,7 +4,7 @@ from typing import Union, List, Dict, Any
 from handshake_client.constant import TIMEOUT
 
 
-class Request:
+class HttpClient:
     def __init__(self, endpoint: str, timeout: int = TIMEOUT):
         assert type(endpoint) == str
         assert type(timeout) == int
