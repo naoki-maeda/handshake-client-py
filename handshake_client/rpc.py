@@ -1,13 +1,21 @@
 from typing import List, Dict, Any
 from bitcoinrpc.authproxy import AuthServiceProxy
+from handshake_client.constant import TIMEOUT
 
 
 class RpcClient:
-    def __init__(self, api_key: str, host: str, port: str):
+    def __init__(self, api_key: str, host: str, port: str, user: str = "x", ssl: bool = False, timeout: int = TIMEOUT):
         assert type(api_key) == str
         assert type(host) == str
         assert type(port) == str
-        self.proxy = AuthServiceProxy(f"http://x:{api_key}@{host}:{port}")
+        assert type(user) == str
+        assert type(ssl) == bool
+        assert type(timeout) == int
+        schema: str = "http"
+        if ssl is True:
+            schema = "https"
+        url = f"{schema}://{user}:{api_key}@{host}:{port}"
+        self.proxy = AuthServiceProxy(url, timeout=timeout)
 
     def getinfo(self) -> Dict[str, Any]:
         return self.proxy.getinfo()
