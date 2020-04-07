@@ -1,5 +1,6 @@
 import json
-import requests
+from requests import get, post
+from requests.exceptions import ConnectionError, HTTPError
 from typing import cast, Union, List, Dict, Any
 from handshake_client.constant import TIMEOUT
 
@@ -13,10 +14,10 @@ class Request:
 
     def get(self, method: str) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         assert type(method) == str
-        r = requests.get(self.endpoint + "/" + method, timeout=self.timeout)
         try:
+            r = get(self.endpoint + "/" + method, timeout=self.timeout)
             r.raise_for_status()
-        except requests.exceptions.HTTPError as e:
+        except (ConnectionError, HTTPError) as e:
             # return handshake Errors format
             return {"error": {"message": str(e)}}
         return r.json()
@@ -25,10 +26,10 @@ class Request:
         assert type(method) == str
         assert type(params) == dict
         headers = {"Content-Type": "application/json"}
-        r = requests.post(self.endpoint + "/" + method, data=json.dumps(params), headers=headers, timeout=self.timeout)
         try:
+            r = post(self.endpoint + "/" + method, data=json.dumps(params), headers=headers, timeout=self.timeout)
             r.raise_for_status()
-        except requests.exceptions.HTTPError as e:
+        except (ConnectionError, HTTPError) as e:
             # return handshake Errors format
             return {"error": {"message": str(e)}}
         return r.json()
@@ -106,4 +107,43 @@ class HttpClient:
         params = {"height": height}
         r = self.request.post("reset", params)
         result = cast(Dict[str, bool], r)
+        return result
+
+    def get_coin_by_hash_and_index(self, hash: str, index: str) -> Dict[str, Any]:
+        assert type(hash) == str
+        assert type(index) == str
+        r = self.request.get(f"coin/{hash}/{index}")
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def get_coin_by_address(self, address: str) -> Dict[str, Any]:
+        assert type(address) == str
+        r = self.request.get(f"coin/address/{address}")
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def get_coin_by_addresses(self, addresses: List[str]) -> Dict[str, Any]:
+        assert type(addresses) == list
+        params = {"address": addresses}
+        r = self.request.post(f"coin/address", params)
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def get_tx_by_hash(self, tx_hash: str) -> Dict[str, Any]:
+        assert type(tx_hash) == str
+        r = self.request.get(f"tx/{tx_hash}")
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def get_tx_by_address(self, address: str) -> Dict[str, Any]:
+        assert type(address) == str
+        r = self.request.get(f"tx/address/{address}")
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def get_tx_by_addresses(self, addresses: List[str]) -> Dict[str, Any]:
+        assert type(addresses) == list
+        params = {"address": addresses}
+        r = self.request.post(f"tx/address", params)
+        result = cast(Dict[str, Any], r)
         return result
