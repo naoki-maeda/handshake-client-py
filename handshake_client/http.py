@@ -1,7 +1,7 @@
 import json
-from requests import get, post
+from requests import get, post, put
 from requests.exceptions import ConnectionError, HTTPError
-from typing import cast, Union, List, Dict, Any
+from typing import cast, Optional, Union, List, Dict, Any
 from handshake_client.constant import TIMEOUT
 
 
@@ -22,12 +22,36 @@ class Request:
             return {"error": {"message": str(e)}}
         return r.json()
 
-    def post(self, method: str, params: Dict[str, Any]) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+    def post(
+        self, method: str, params: Dict[str, Any]
+    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         assert type(method) == str
         assert type(params) == dict
         headers = {"Content-Type": "application/json"}
         try:
-            r = post(self.endpoint + "/" + method, data=json.dumps(params), headers=headers, timeout=self.timeout)
+            r = post(
+                self.endpoint + "/" + method,
+                data=json.dumps(params),
+                headers=headers,
+                timeout=self.timeout,
+            )
+            r.raise_for_status()
+        except (ConnectionError, HTTPError) as e:
+            # return handshake Errors format
+            return {"error": {"message": str(e)}}
+        return r.json()
+
+    def put(
+        self, method: str, params: Dict[str, Any]
+    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+        assert type(method) == str
+        assert type(params) == dict
+        try:
+            r = put(
+                self.endpoint + "/" + method,
+                data=json.dumps(params),
+                timeout=self.timeout,
+            )
             r.raise_for_status()
         except (ConnectionError, HTTPError) as e:
             # return handshake Errors format
@@ -36,7 +60,15 @@ class Request:
 
 
 class HttpClient:
-    def __init__(self, api_key: str, host: str, port: str, user: str = "x", ssl: bool = False, timeout: int = TIMEOUT):
+    def __init__(
+        self,
+        api_key: str,
+        host: str,
+        port: str,
+        user: str = "x",
+        ssl: bool = False,
+        timeout: int = TIMEOUT,
+    ):
         assert type(api_key) == str
         assert type(host) == str
         assert type(port) == str
@@ -145,5 +177,79 @@ class HttpClient:
         assert type(addresses) == list
         params = {"address": addresses}
         r = self.request.post(f"tx/address", params)
+        result = cast(Dict[str, Any], r)
+        return result
+
+
+class WalletHttpClient:
+    def __init__(
+        self,
+        api_key: str,
+        host: str,
+        port: str,
+        user: str = "x",
+        ssl: bool = False,
+        timeout: int = TIMEOUT,
+    ):
+        assert type(api_key) == str
+        assert type(host) == str
+        assert type(port) == str
+        assert type(user) == str
+        assert type(ssl) == bool
+        assert type(timeout) == int
+        schema: str = "http"
+        if ssl is True:
+            schema = "https"
+        endpoint = f"{schema}://{user}:{api_key}@{host}:{port}/wallet"
+        self.request = Request(endpoint, timeout)
+
+    def create_wallet(
+        self,
+        wallet_id: str,
+        type_: str = "pubkeyhash",
+        master: Optional[str] = None,
+        mnemonic: Optional[str] = None,
+        passphrase: Optional[str] = None,
+        witness: bool = False,
+        m: int = 1,
+        n: int = 1,
+        watch_only: bool = False,
+        account_key: Optional[str] = None,
+        account_depth: int = 0,
+    ) -> Dict[str, Any]:
+        """
+        Create a new wallet with a specified ID.
+        see https://hsd-dev.org/api-docs/index.html?shell--curl#wallet
+        """
+        assert type(wallet_id) == str
+        assert type(type_) == str
+        assert master is None or type(master) == str
+        assert mnemonic is None or type(mnemonic) == str
+        assert passphrase is None or type(passphrase) == str
+        assert type(witness) == bool
+        assert type(m) == int
+        assert type(n) == int
+        assert type(watch_only) == bool
+        assert account_key is None or type(account_key) == str
+        assert type(account_depth) == int
+        # default params
+        params: Dict[str, Any] = {
+            "witness": witness,
+            "type": type_,
+            "m": m,
+            "n": n,
+            "watchOnly": watch_only,
+            "accountDepth": account_depth,
+        }
+        # Optional
+        if master:
+            params["master"] = master
+        if mnemonic:
+            params["mnemonic"] = mnemonic
+        if passphrase:
+            params["passphrase"] = passphrase
+        if account_key:
+            params["accountKey"] = account_key
+        r = self.request.put(wallet_id, params=params)
         result = cast(Dict[str, Any], r)
         return result
