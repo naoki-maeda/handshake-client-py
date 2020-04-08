@@ -397,3 +397,47 @@ class RpcClient:
 
     def clearbanned(self) -> None:
         return self.proxy.clearbanned()
+
+    # RPC Calls - Names
+    def getnameinfo(self, name: str) -> Dict[str, Any]:
+        assert type(name) == str
+        return self.proxy.getnameinfo(name)
+
+    def getnames(self) -> List[Dict[str, Any]]:
+        # NOTE: warning this does not yet support pagination
+        return self.proxy.getnames()
+
+    def getnamebyhash(self, name_hash: str) -> Dict[str, Any]:
+        assert type(name_hash) == str
+        return self.proxy.getnamebyhash(name_hash)
+
+    def getnameresource(self, name: str) -> Dict[str, Any]:
+        assert type(name) == str
+        return self.proxy.getnameresource(name)
+
+    def getnameproof(self, name: str) -> Dict[str, Any]:
+        assert type(name) == str
+        return self.proxy.getnameproof(name)
+
+    def createclaim(self, name: str) -> Dict[str, Any]:
+        assert type(name) == str
+        return self.proxy.createclaim(name)
+
+    def sendclaim(self, name: str) -> None:
+        assert type(name) == str
+        return self.proxy.sendclaim(name)
+
+    def sendrawclaim(self, claim_hex: str) -> None:
+        assert type(claim_hex) == str
+        return self.proxy.sendrawclaim(claim_hex)
+
+    def sendrawairdrop(self, claim_hex: str) -> None:
+        assert type(claim_hex) == str
+        return self.proxy.sendrawairdrop(claim_hex)
+
+    def grindname(self, length: int) -> None:
+        """
+        Grind a rolled-out available name.
+        """
+        assert type(length) == int
+        return self.proxy.grindname()
