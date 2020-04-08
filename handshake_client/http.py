@@ -253,3 +253,38 @@ class WalletHttpClient:
         r = self.request.put(wallet_id, params=params)
         result = cast(Dict[str, Any], r)
         return result
+
+    def reset_token(
+        self, wallet_id: str, passphrase: Optional[str] = None
+    ) -> Dict[str, str]:
+        assert type(wallet_id) == str
+        assert passphrase is None or type(passphrase) == str
+        params: Dict[str, str] = {}
+        if passphrase:
+            params["passphrase"] = passphrase
+        r = self.request.post(f"{wallet_id}/retoken", params=params)
+        result = cast(Dict[str, str], r)
+        return result
+
+    def get_wallet_info(self, wallet_id: str) -> Dict[str, Any]:
+        assert type(wallet_id) == str
+        r = self.request.get(wallet_id)
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def get_master_hd_key(self, wallet_id: str) -> Dict[str, Any]:
+        assert type(wallet_id) == str
+        r = self.request.get(f"{wallet_id}/master")
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def change_passphrase(
+        self, wallet_id: str, old_pass: str, new_pass: str
+    ) -> Dict[str, bool]:
+        assert type(wallet_id) == str
+        assert type(old_pass) == str
+        assert type(new_pass) == str
+        params = {"old": old_pass, "passphrase": new_pass}
+        r = self.request.post(f"{wallet_id}/passphrase", params)
+        result = cast(Dict[str, bool], r)
+        return result
