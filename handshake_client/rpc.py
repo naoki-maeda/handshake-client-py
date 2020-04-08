@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Optional, Union, List, Dict, Any
 from bitcoinrpc.authproxy import AuthServiceProxy
-from handshake_client.constant import TIMEOUT
+from handshake_client.constant import TIMEOUT, COMMANDS
 
 
 class RpcClient:
@@ -294,3 +294,106 @@ class RpcClient:
     def verifytxoutproof(self, proof: str) -> List[str]:
         assert type(proof) == str
         return self.proxy.verifytxoutproof(proof)
+
+    # RPC Calls - Mining
+    def getnetworkhashps(self, blocks: int, height: int) -> float:
+        assert type(blocks) == int
+        assert type(height) == int
+        return self.proxy.getnetworkhashps(blocks, height)
+
+    def getmininginfo(self) -> Dict[str, Any]:
+        return self.proxy.getmininginfo()
+
+    def getwork(self, data: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Returns hashing work to be solved by miner. Or submits solved block.
+        data: required hex string. Data to be submitted to the network.
+        """
+        assert data is None or type(data) == str
+        return self.proxy.getwork(data)
+
+    def getworklp(self) -> Dict[str, Any]:
+        return self.proxy.getworklp()
+
+    def getblocktemplate(self, json_obj: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        returns block template or proposal for use with mining. Also validates proposal if mode is specified as proposal.
+        see https://hsd-dev.org/api-docs/index.html?shell--curl#getblocktemplate
+        """
+        assert type(json_obj) == dict
+        return self.proxy.getblocktemplate(json_obj)
+
+    def submitblock(self, block_data_by_hex: str) -> None:
+        assert type(block_data_by_hex) == str
+        return self.proxy.submitblock(block_data_by_hex)
+
+    def verifyblock(self, block_data_by_hex: str) -> None:
+        assert type(block_data_by_hex) == str
+        return self.proxy.verifyblock(block_data_by_hex)
+
+    def setgenerate(self, mining: int, proc_limit: int) -> bool:
+        """
+        Will start the mining on CPU.
+        mining: 1 will start mining, 0 will stop.
+        """
+        assert mining in [0, 1]
+        assert type(proc_limit) == int
+        return self.proxy.setgenerate(mining, proc_limit)
+
+    def getgenerate(self) -> Dict[str, Any]:
+        return self.proxy.getgenerate()
+
+    def generate(self, num_blocks: int, maxtries: Optional[int] = None) -> List[str]:
+        assert type(num_blocks) == int
+        assert maxtries is None or type(maxtries) == int
+        return self.proxy.generate(num_blocks, maxtries)
+
+    def generatetoaddress(self, num_blocks: int, address: str) -> List[str]:
+        assert type(num_blocks) == int
+        assert type(address) == str
+        return self.proxy.generatetoaddress(num_blocks, address)
+
+    # RPC Calls - Network
+    def ping(self) -> None:
+        return self.proxy.ping()
+
+    def getpeerinfo(self) -> List[Dict[str, Any]]:
+        return self.proxy.getpeerinfo()
+
+    def addnode(self, ip_addr: str, cmd: str) -> None:
+        """
+        Adds or removes peers in Host List.
+        ip_addr: IP Address of the Node.
+        cmd: Command ex.
+            add: Adds node to Host List and connects to it
+            onetry: Tries to connect to the given node
+            remove: Removes node from host list
+        """
+        assert type(ip_addr) == str
+        assert cmd in COMMANDS
+        return self.proxy.addnode(ip_addr, cmd)
+
+    def disconnectnode(self, ip_addr: str) -> None:
+        assert type(ip_addr) == str
+        return self.proxy.disconnectnode()
+
+    def getaddednodeinfo(self, ip_addr: str) -> List[Dict[str, Any]]:
+        assert type(ip_addr) == str
+        return self.proxy.getaddednodeinfo(ip_addr)
+
+    def getnettotals(self) -> Dict[str, Any]:
+        return self.proxy.getnettotals()
+
+    def getnetworkinfo(self) -> Dict[str, Any]:
+        return self.proxy.getnetworkinfo()
+
+    def setban(self, ip_addr: str, cmd: str) -> None:
+        assert type(ip_addr) == str
+        assert cmd in COMMANDS
+        return self.proxy.setban(ip_addr, cmd)
+
+    def listbanned(self) -> List[Dict[str, Any]]:
+        return self.proxy.listbanned()
+
+    def clearbanned(self) -> None:
+        return self.proxy.clearbanned()
