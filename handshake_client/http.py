@@ -1,5 +1,5 @@
 import json
-from requests import get, post, put
+from requests import get, post, put, delete
 from requests.exceptions import ConnectionError, HTTPError
 from typing import cast, Optional, Union, List, Dict, Any
 from handshake_client.constant import TIMEOUT
@@ -12,46 +12,61 @@ class Request:
         self.endpoint = endpoint
         self.timeout = timeout
 
-    def get(self, method: str) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
-        assert type(method) == str
-        try:
-            r = get(self.endpoint + "/" + method, timeout=self.timeout)
-            r.raise_for_status()
-        except (ConnectionError, HTTPError) as e:
-            # return handshake Errors format
-            return {"error": {"message": str(e)}}
-        return r.json()
+    def get(self, path: str) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+        assert type(path) == str
+        return self.try_request("GET", path)
 
     def post(
-        self, method: str, params: Dict[str, Any]
+        self, path: str, params: Dict[str, Any]
     ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
-        assert type(method) == str
+        assert type(path) == str
         assert type(params) == dict
-        headers = {"Content-Type": "application/json"}
-        try:
-            r = post(
-                self.endpoint + "/" + method,
-                data=json.dumps(params),
-                headers=headers,
-                timeout=self.timeout,
-            )
-            r.raise_for_status()
-        except (ConnectionError, HTTPError) as e:
-            # return handshake Errors format
-            return {"error": {"message": str(e)}}
-        return r.json()
+        return self.try_request("POST", path, params)
 
     def put(
-        self, method: str, params: Dict[str, Any]
+        self, path: str, params: Dict[str, Any]
+    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+        assert type(path) == str
+        assert type(params) == dict
+        return self.try_request("PUT", path, params)
+
+    def delete(
+        self, path: str, params: Dict[str, Any]
+    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+        assert type(path) == str
+        assert type(params) == dict
+        return self.try_request("DELETE", path, params)
+
+    def try_request(
+        self, method: str, path: str, params: Optional[Dict[str, Any]] = None
     ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         assert type(method) == str
-        assert type(params) == dict
+        assert method in ["GET", "POST", "PUT", "DELETE"]
+        assert type(path) == str
+        assert params is None or type(params) == dict
         try:
-            r = put(
-                self.endpoint + "/" + method,
-                data=json.dumps(params),
-                timeout=self.timeout,
-            )
+            headers = {"Content-Type": "application/json"}
+            if method == "GET":
+                r = get(self.endpoint + "/" + path, timeout=self.timeout)
+            elif method == "POST":
+                r = post(
+                    self.endpoint + "/" + path,
+                    data=json.dumps(params),
+                    headers=headers,
+                    timeout=self.timeout,
+                )
+            elif method == "PUT":
+                r = put(
+                    self.endpoint + "/" + path,
+                    data=json.dumps(params),
+                    timeout=self.timeout,
+                )
+            elif method == "DELETE":
+                r = delete(
+                    self.endpoint + "/" + path,
+                    data=json.dumps(params),
+                    timeout=self.timeout,
+                )
             r.raise_for_status()
         except (ConnectionError, HTTPError) as e:
             # return handshake Errors format
@@ -254,9 +269,7 @@ class WalletHttpClient:
         result = cast(Dict[str, Any], r)
         return result
 
-    def reset_token(
-        self, passphrase: Optional[str] = None
-    ) -> Dict[str, str]:
+    def reset_token(self, passphrase: Optional[str] = None) -> Dict[str, str]:
         assert passphrase is None or type(passphrase) == str
         params: Dict[str, str] = {}
         if passphrase:
@@ -275,9 +288,7 @@ class WalletHttpClient:
         result = cast(Dict[str, Any], r)
         return result
 
-    def change_passphrase(
-        self, old_pass: str, new_pass: str
-    ) -> Dict[str, bool]:
+    def change_passphrase(self, old_pass: str, new_pass: str) -> Dict[str, bool]:
         assert type(old_pass) == str
         assert type(new_pass) == str
         params = {"old": old_pass, "passphrase": new_pass}
@@ -339,9 +350,7 @@ class WalletHttpClient:
         result = cast(Dict[str, Any], r)
         return result
 
-    def zap_transactions(
-        self, account: str, age: int
-    ) -> Dict[str, bool]:
+    def zap_transactions(self, account: str, age: int) -> Dict[str, bool]:
         """
         Remove all pending transactions older than a specified age.
         """
@@ -368,9 +377,7 @@ class WalletHttpClient:
         result = cast(Dict[str, bool], r)
         return result
 
-    def import_privkey(
-        self, account: str, privkey: str
-    ) -> Dict[str, bool]:
+    def import_privkey(self, account: str, privkey: str) -> Dict[str, bool]:
         assert type(account) == str
         assert type(privkey) == str
         params = {"account": account, "privateKey": privkey}
@@ -378,9 +385,7 @@ class WalletHttpClient:
         result = cast(Dict[str, bool], r)
         return result
 
-    def import_pubkey(
-        self, account: str, pubkey: str
-    ) -> Dict[str, bool]:
+    def import_pubkey(self, account: str, pubkey: str) -> Dict[str, bool]:
         assert type(account) == str
         assert type(pubkey) == str
         # import watch-only
@@ -389,9 +394,7 @@ class WalletHttpClient:
         result = cast(Dict[str, bool], r)
         return result
 
-    def import_address(
-        self, account: str, address: str
-    ) -> Dict[str, bool]:
+    def import_address(self, account: str, address: str) -> Dict[str, bool]:
         assert type(account) == str
         assert type(address) == str
         # import watch-only
@@ -422,4 +425,3 @@ class WalletHttpClient:
         r = self.request.put("shared-key", params)
         result = cast(Dict[str, bool], r)
         return result
-
