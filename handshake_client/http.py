@@ -425,3 +425,97 @@ class WalletHttpClient:
         r = self.request.put("shared-key", params)
         result = cast(Dict[str, bool], r)
         return result
+
+    def delete_shared_key(self, account: str, xpubkey: str) -> Dict[str, bool]:
+        assert type(account) == str
+        assert type(xpubkey) == str
+        params = {"accountKey": xpubkey, "account": account}
+        r = self.request.delete("shared-key", params)
+        result = cast(Dict[str, bool], r)
+        return result
+
+    def get_pubkey_by_address(self, address: str) -> Dict[str, Any]:
+        assert type(address) == str
+        r = self.request.get(f"key/{address}")
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def get_privkey_by_address(self, address: str, passphrase: Optional[str] = None) -> Dict[str, str]:
+        assert type(address) == str
+        assert passphrase is None or type(passphrase) == str
+        path: str = f"wif/{address}"
+        if passphrase:
+            path += f"?passphrase={passphrase}"
+        r = self.request.get(path)
+        result = cast(Dict[str, str], r)
+        return result
+
+    def generate_receive_address(self, account: str) -> Dict[str, Any]:
+        assert type(account) == str
+        params = {"account": account}
+        r = self.request.post("address", params)
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def generate_change_address(self, account: str) -> Dict[str, Any]:
+        assert type(account) == str
+        params = {"account": account}
+        r = self.request.post("change", params)
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def derive_nested_address(self, account: str) -> Dict[str, Any]:
+        """
+        Derive new nested p2sh receiving address for account.
+        Note that this can't be done on a non-witness account.
+        """
+        assert type(account) == str
+        params = {"account": account}
+        r = self.request.post("nested", params)
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def get_balance(self, account: str) -> Dict[str, Any]:
+        assert type(account) == str
+        r = self.request.get(f"balance?account={account}")
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def get_all_coins(self) -> List[Dict[str, Any]]:
+        r = self.request.get("coin")
+        result = cast(List[Dict[str, Any]], r)
+        return result
+
+    def lock_outpoints(self, tx_hash: str, index: str, passphrase: Optional[str] = None) -> Dict[str, bool]:
+        assert type(tx_hash) == str
+        assert type(index) == str
+        assert passphrase is None or type(passphrase) == str
+        params = {}
+        if passphrase:
+            params["passphrase"] = passphrase
+        r = self.request.put(f"locked/{tx_hash}/{index}", params)
+        result = cast(Dict[str, bool], r)
+        return result
+
+    def unlock_outpoints(self, tx_hash: str, index: str, passphrase: Optional[str] = None) -> Dict[str, bool]:
+        assert type(tx_hash) == str
+        assert type(index) == str
+        assert passphrase is None or type(passphrase) == str
+        params = {}
+        if passphrase:
+            params["passphrase"] = passphrase
+        r = self.request.delete(f"locked/{tx_hash}/{index}", params)
+        result = cast(Dict[str, bool], r)
+        return result
+
+    def get_locked_outpoints(self) -> List[Dict[str, Any]]:
+        r = self.request.get(f"locked")
+        result = cast(List[Dict[str, bool]], r)
+        return result
+
+    def get_wallet_coin(self, tx_hash: str, index: str) -> Dict[str, Any]:
+        assert type(tx_hash) == str
+        assert type(index) == str
+        r = self.request.get(f"coin/{tx_hash}/{index}")
+        result = cast(Dict[str, Any], r)
+        return result
