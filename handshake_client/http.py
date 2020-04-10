@@ -519,3 +519,64 @@ class WalletHttpClient:
         r = self.request.get(f"coin/{tx_hash}/{index}")
         result = cast(Dict[str, Any], r)
         return result
+
+    # Wallet - Accounts
+    def get_wallet_account_list(self) -> List[str]:
+        r = self.request.get("account")
+        result = cast(List[str], r)
+        return result
+
+
+class WalletAdminCommand:
+    def __init__(
+        self,
+        api_key: str,
+        host: str,
+        port: str,
+        user: str = "x",
+        ssl: bool = False,
+        timeout: int = TIMEOUT,
+    ):
+        assert type(api_key) == str
+        assert type(host) == str
+        assert type(port) == str
+        assert type(user) == str
+        assert type(ssl) == bool
+        assert type(timeout) == int
+        schema: str = "http"
+        if ssl is True:
+            schema = "https"
+        endpoint = f"{schema}://{user}:{api_key}@{host}:{port}/"
+        self.request = Request(endpoint, timeout)
+
+    def rescan(self, height: int) -> Dict[str, bool]:
+        assert type(height) == int
+        params = {"height": height}
+        r = self.request.post("rescan", params)
+        result = cast(Dict[str, bool], r)
+        return result
+
+    def resend(self) -> Dict[str, bool]:
+        """
+        Rebroadcast all pending transactions in all wallets.
+        """
+        r = self.request.post("rescan", {})
+        result = cast(Dict[str, bool], r)
+        return result
+
+    def backup(self, path: str) -> Dict[str, bool]:
+        assert type(path) == str
+        r = self.request.post(f"backup?path={path}", {})
+        result = cast(Dict[str, bool], r)
+        return result
+
+    def export_master_wallet(self, wallet_id: str) -> Dict[str, Any]:
+        assert type(wallet_id) == str
+        r = self.request.get(f"{wallet_id}/master")
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def get_all_wallets(self) -> List[str]:
+        r = self.request.get("wallet")
+        result = cast(List[str], r)
+        return result
