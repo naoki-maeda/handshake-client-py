@@ -69,9 +69,11 @@ class Request:
                     timeout=self.timeout,
                 )
             r.raise_for_status()
-        except (ConnectionError, HTTPError) as e:
+        except ConnectionError as e:
             # return handshake Errors format
             return {"error": {"message": str(e)}}
+        except HTTPError as e:
+            return {"error": {"message": json.loads(e.response.content)}}
         return r.json()
 
 
