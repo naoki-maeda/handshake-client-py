@@ -441,3 +441,8 @@ class RpcClient:
         """
         assert type(length) == int
         return self.proxy.grindname()
+
+    # RPC Calls - Wallet Auctions
+    def getauctioninfo(self, name: str) -> Dict[str, Any]:
+        assert type(name) == str
+        return self.proxy.getauctioninfo(name)
