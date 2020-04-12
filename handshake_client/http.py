@@ -803,7 +803,7 @@ class WalletHttpClient:
         Create, sign, and send an UPDATE. This transaction updates the resource data associated with a given name.
         type_: DNS record type
         data: Resource Object see URL
-        https://hsd-dev.org/api-docs/index.html?shell--cli#resource-object 
+        https://hsd-dev.org/api-docs/index.html?shell--cli#resource-object
         """
         assert type(name) == str
         assert type(sign) == bool

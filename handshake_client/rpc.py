@@ -8,6 +8,7 @@ from handshake_client.constant import TIMEOUT, COMMANDS
 class RpcClient:
     """
     see https://hsd-dev.org/api-docs/index.html
+    NOTE: Not done yet RPC Calls - Wallet https://hsd-dev.org/api-docs/index.html?shell--cli#rpc-calls-wallet
     """
 
     def __init__(
@@ -490,7 +491,7 @@ class RpcClient:
     def sendupdate(self, name: str, data: Dict[str, List[Dict[str, str]]]) -> Dict[str, Any]:
         """
         data: Resource Object see URL
-        https://hsd-dev.org/api-docs/index.html?shell--cli#resource-object 
+        https://hsd-dev.org/api-docs/index.html?shell--cli#resource-object
         """
         assert type(name) == str
         assert type(data) == dict
