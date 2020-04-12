@@ -49,7 +49,6 @@ class Request:
             if method == "GET":
                 r = get(self.endpoint + "/" + path, timeout=self.timeout)
             elif method == "POST":
-                print(json.dumps(params))
                 r = post(
                     self.endpoint + "/" + path,
                     data=json.dumps(params),
@@ -73,7 +72,7 @@ class Request:
             # return handshake Errors format
             return {"error": {"message": str(e)}}
         except HTTPError as e:
-            return {"error": {"message": json.loads(e.response.content)}}
+            return json.loads(e.response.content)
         return r.json()
 
 
