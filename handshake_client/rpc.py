@@ -1,3 +1,4 @@
+import json
 from decimal import Decimal
 from typing import Optional, Union, List, Dict, Any
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
@@ -412,6 +413,12 @@ class RpcClient:
         return self.rpc_call("getnameinfo", name)
 
     def getnames(self) -> List[Dict[str, Any]]:
+        """
+        The result depends on the port.
+        mainnet ex:
+            12037 https://hsd-dev.org/api-docs/index.html?shell--curl#getnames-hsd
+            12039 https://hsd-dev.org/api-docs/index.html?shell--curl#getnames-hsw
+        """
         # NOTE: warning this does not yet support pagination
         return self.rpc_call("getnames")
 
@@ -451,6 +458,67 @@ class RpcClient:
         return self.rpc_call("grindname")
 
     # RPC Calls - Wallet Auctions
+    # port change(ex. mainnet port 12039)
     def getauctioninfo(self, name: str) -> Dict[str, Any]:
         assert type(name) == str
         return self.rpc_call('getauctioninfo', name)
+
+    def getbids(self) -> List[Dict[str, Any]]:
+        return self.rpc_call('getbids')
+
+    def getreveals(self) -> List[Dict[str, Any]]:
+        return self.rpc_call('getreveals')
+
+    def sendopen(self, name: str) -> Dict[str, Any]:
+        assert type(name) == str
+        return self.rpc_call('sendopen', name)
+
+    def sendbid(self, name: str, amount: float, lockup: float) -> Dict[str, Any]:
+        assert type(name) == str
+        assert type(amount) == float
+        assert type(lockup) == float
+        return self.rpc_call('sendbid', name, amount, lockup)
+
+    def sendreveal(self, name: str) -> Dict[str, Any]:
+        assert type(name) == str
+        return self.rpc_call('sendreveal', name)
+
+    def sendredeem(self, name: str) -> Dict[str, Any]:
+        assert type(name) == str
+        return self.rpc_call('sendredeem', name)
+
+    def sendupdate(self, name: str, data: Dict[str, List[Dict[str, str]]]) -> Dict[str, Any]:
+        """
+        data: Resource Object see URL
+        https://hsd-dev.org/api-docs/index.html?shell--cli#resource-object 
+        """
+        assert type(name) == str
+        assert type(data) == dict
+        return self.rpc_call('sendupdate', name, json.dumps(data))
+
+    def sendrenewal(self, name: str) -> Dict[str, Any]:
+        assert type(name) == str
+        return self.rpc_call('sendrenewal', name)
+
+    def sendtransfer(self, name: str, address: str) -> Dict[str, Any]:
+        assert type(name) == str
+        assert type(address) == str
+        return self.rpc_call('sendtransfer', name, address)
+
+    def sendfinalize(self, name: str) -> Dict[str, Any]:
+        assert type(name) == str
+        return self.rpc_call('sendfinalize', name)
+
+    def sendcancel(self, name: str) -> Dict[str, Any]:
+        assert type(name) == str
+        return self.rpc_call("sendcancel", name)
+
+    def sendrevoke(self, name: str) -> Dict[str, Any]:
+        assert type(name) == str
+        return self.rpc_call("sendrevoke", name)
+
+    def importnonce(self, name: str, address: str, value: float) -> Dict[str, Any]:
+        assert type(name) == str
+        assert type(address) == str
+        assert type(value) == float
+        return self.rpc_call("importnonce", name, address, value)

@@ -796,28 +796,26 @@ class WalletHttpClient:
         name: str,
         sign: bool,
         broadcast: bool,
-        value: str,
-        key: str = "txt",
-        type_: str = "TXT",
+        data: Dict[str, List[Dict[str, str]]],
         passphrase: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Create, sign, and send an UPDATE. This transaction updates the resource data associated with a given name.
         type_: DNS record type
+        data: Resource Object see URL
+        https://hsd-dev.org/api-docs/index.html?shell--cli#resource-object 
         """
         assert type(name) == str
         assert type(sign) == bool
         assert type(broadcast) == bool
-        assert type(key) == str
-        assert type(value) == str
-        assert type(type_) == str
+        assert type(data) == dict
         assert passphrase is None or type(passphrase) == str
         params = {
             "name": name,
             "passphrase": "pass",
             "sign": sign,
             "broadcast": broadcast,
-            "data": {"records": [{"type": type_, key: [value]}]}
+            "data": data
         }
         r = self.request.post("update", params)
         result = cast(Dict[str, Any], r)
