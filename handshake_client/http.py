@@ -49,6 +49,7 @@ class Request:
             if method == "GET":
                 r = get(self.endpoint + "/" + path, timeout=self.timeout)
             elif method == "POST":
+                print(json.dumps(params))
                 r = post(
                     self.endpoint + "/" + path,
                     data=json.dumps(params),
@@ -217,7 +218,7 @@ class WalletHttpClient:
         schema: str = "http"
         if ssl is True:
             schema = "https"
-        endpoint = f"{schema}://{user}:{api_key}@{host}:{port}/wallet/{wallet_id}/"
+        endpoint = f"{schema}://{user}:{api_key}@{host}:{port}/wallet/{wallet_id}"
         self.request = Request(endpoint, timeout)
 
     def create_wallet(
@@ -440,7 +441,9 @@ class WalletHttpClient:
         result = cast(Dict[str, Any], r)
         return result
 
-    def get_privkey_by_address(self, address: str, passphrase: Optional[str] = None) -> Dict[str, str]:
+    def get_privkey_by_address(
+        self, address: str, passphrase: Optional[str] = None
+    ) -> Dict[str, str]:
         assert type(address) == str
         assert passphrase is None or type(passphrase) == str
         path: str = f"wif/{address}"
@@ -486,7 +489,9 @@ class WalletHttpClient:
         result = cast(List[Dict[str, Any]], r)
         return result
 
-    def lock_outpoints(self, tx_hash: str, index: str, passphrase: Optional[str] = None) -> Dict[str, bool]:
+    def lock_outpoints(
+        self, tx_hash: str, index: str, passphrase: Optional[str] = None
+    ) -> Dict[str, bool]:
         assert type(tx_hash) == str
         assert type(index) == str
         assert passphrase is None or type(passphrase) == str
@@ -497,7 +502,9 @@ class WalletHttpClient:
         result = cast(Dict[str, bool], r)
         return result
 
-    def unlock_outpoints(self, tx_hash: str, index: str, passphrase: Optional[str] = None) -> Dict[str, bool]:
+    def unlock_outpoints(
+        self, tx_hash: str, index: str, passphrase: Optional[str] = None
+    ) -> Dict[str, bool]:
         assert type(tx_hash) == str
         assert type(index) == str
         assert passphrase is None or type(passphrase) == str
@@ -524,6 +531,419 @@ class WalletHttpClient:
     def get_wallet_account_list(self) -> List[str]:
         r = self.request.get("account")
         result = cast(List[str], r)
+        return result
+
+    def get_account_info(self, account: str) -> Dict[str, Any]:
+        assert type(account) == str
+        r = self.request.get(f"account/{account}")
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def create_new_wallet(
+        self,
+        name: str,
+        type_: str = "pubkeyhash",
+        passphrase: Optional[str] = None,
+        witness: bool = False,
+        m: int = 1,
+        n: int = 1,
+        account_key: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        assert type(name) == str
+        assert type(type_) == str
+        assert passphrase is None or type(passphrase) == str
+        assert type(witness) == bool
+        assert type(m) == int
+        assert type(n) == int
+        assert account_key is None or type(account_key) == str
+        # default params
+        params: Dict[str, Any] = {
+            "witness": witness,
+            "type": type_,
+            "m": m,
+            "n": n,
+        }
+        # Optional
+        if passphrase:
+            params["passphrase"] = passphrase
+        if account_key:
+            params["accountKey"] = account_key
+        r = self.request.put(f"account/{name}", params)
+        result = cast(Dict[str, Any], r)
+        return result
+
+    # Wallet - Transactions
+    def get_tx_details(self, tx_hash: str) -> Dict[str, Any]:
+        assert type(tx_hash) == str
+        r = self.request.get(f"tx/{tx_hash}")
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def delete_tx(self, tx_hash: str) -> Union[str, None]:
+        """
+        Abandon single pending transaction. Confirmed transactions will throw an error. "TX not eligible"
+        """
+        assert type(tx_hash) == str
+        r = self.request.delete("tx", {})
+        result = cast(Optional[str], r)
+        return result
+
+    def get_wallet_tx_history(self) -> List[Dict[str, Any]]:
+        r = self.request.get("tx/history")
+        result = cast(List[Dict[str, Any]], r)
+        return result
+
+    def get_pending_transactions(self) -> List[Dict[str, Any]]:
+        r = self.request.get("tx/unconfirmed")
+        result = cast(List[Dict[str, Any]], r)
+        return result
+
+    def get_range_of_transactions(
+        self, account: str, start: int, end: int
+    ) -> List[Dict[str, Any]]:
+        """
+        Note that there are other options documented that `getRange` accepts in the options body, `limit` and `reverse`.
+        At the time of writing however they do not have any effect.
+        start: start unixtime to get range from
+        end: end unixtime to get range from
+        """
+        assert type(account) == str
+        assert type(start) == int
+        assert type(end) == int
+        r = self.request.get(f"tx/range?start={start}&end={end}")
+        result = cast(List[Dict[str, Any]], r)
+        return result
+
+    # Wallet - Auctions
+    def get_wallet_names(self) -> List[Dict[str, Any]]:
+        r = self.request.get(f"name")
+        result = cast(List[Dict[str, Any]], r)
+        return result
+
+    def get_wallet_name(self, name: str) -> Dict[str, Any]:
+        assert type(name) == str
+        r = self.request.get(f"name/{name}")
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def get_wallet_auction(self) -> List[Dict[str, Any]]:
+        r = self.request.get("auction")
+        result = cast(List[Dict[str, Any]], r)
+        return result
+
+    def get_wallet_auction_by_name(self, name: str) -> Dict[str, Any]:
+        assert type(name) == str
+        r = self.request.get(f"auction/{name}")
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def get_wallet_bids(self, own: str = "true") -> List[Dict[str, Any]]:
+        assert own in ["true", "false"]
+        r = self.request.get(f"bid?own={own}")
+        result = cast(List[Dict[str, Any]], r)
+        return result
+
+    def get_wallet_bids_by_name(self, name: str) -> List[Dict[str, Any]]:
+        assert type(name) == str
+        r = self.request.get(f"bid/{name}")
+        result = cast(List[Dict[str, Any]], r)
+        return result
+
+    def get_wallet_reveals(self, own: str = "true") -> List[Dict[str, Any]]:
+        assert own in ["true", "false"]
+        r = self.request.get(f"reveal?own={own}")
+        result = cast(List[Dict[str, Any]], r)
+        return result
+
+    def get_wallet_reveals_by_name(
+        self, name: str, own: str = "true"
+    ) -> List[Dict[str, Any]]:
+        assert type(name) == str
+        assert own in ["true", "false"]
+        r = self.request.get(f"reveal/{name}?own={own}")
+        result = cast(List[Dict[str, Any]], r)
+        return result
+
+    def get_wallet_resource_by_name(self, name: str) -> Dict[str, Any]:
+        assert type(name) == str
+        r = self.request.get(f"resource/{name}")
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def get_nonce_for_bid(
+        self, name: str, bid: Union[int, float], address: str
+    ) -> Dict[str, Any]:
+        """
+        Deterministically generate a nonce to blind a bid.
+        bid: value of bid to blind
+        address: address controlling bid
+        """
+        assert type(name) == str
+        assert type(bid) == int or type(bid) == float
+        assert type(address) == str
+        r = self.request.get(f"nonce/{name}?address={address}&bid={bid}")
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def send_open(
+        self,
+        name: str,
+        sign: bool,
+        broadcast: bool,
+        passphrase: Optional[str] = None
+    ) -> Dict[str, Any]:
+        assert type(name) == str
+        assert type(sign) == bool
+        assert type(broadcast) == bool
+        assert passphrase is None or type(passphrase) == str
+        params = {
+            "name": name,
+            "passphrase": passphrase,
+            "sign": sign,
+            "broadcast": broadcast,
+        }
+        r = self.request.post("open", params)
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def send_bid(
+        self,
+        name: str,
+        sign: bool,
+        broadcast: bool,
+        bid: int,
+        lockup: int,
+        passphrase: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        bid: int value (in dollarydoos) to bid for name
+        lockup: int	value (in dollarydoos) to actually send in the transaction, blinding the actual bid value
+        """
+        assert type(name) == str
+        assert type(sign) == bool
+        assert type(broadcast) == bool
+        assert type(bid) == int
+        assert type(lockup) == int
+        assert passphrase is None or type(passphrase) == str
+        params = {
+            "name": name,
+            "passphrase": passphrase,
+            "sign": sign,
+            "broadcast": broadcast,
+            "bid": bid,
+            "lockup": lockup
+        }
+        r = self.request.post("bid", params)
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def send_reveal(
+        self,
+        name: str,
+        sign: bool,
+        broadcast: bool,
+        passphrase: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Create, sign, and send a name REVEAL.
+        If multiple bids were placed on a name, all bids will be revealed by this transaction.
+        If no value is passed in for name, all reveals for all names in the wallet will be sent.
+        """
+        assert type(name) == str
+        assert type(sign) == bool
+        assert type(broadcast) == bool
+        assert passphrase is None or type(passphrase) == str
+        params = {
+            "name": name,
+            "passphrase": passphrase,
+            "sign": sign,
+            "broadcast": broadcast,
+        }
+        r = self.request.post("reveal", params)
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def send_redeem(
+        self,
+        name: str,
+        sign: bool,
+        broadcast: bool,
+        passphrase: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Create, sign, and send a REDEEM.
+        This transaction sweeps the value from losing bids back into the wallet.
+        If multiple bids (and reveals) were placed on a name, all losing bids will be redeemed by this transaction.
+        If no value is passed in for name, all qualifying bids are redeemed.
+        """
+        assert type(name) == str
+        assert type(sign) == bool
+        assert type(broadcast) == bool
+        assert passphrase is None or type(passphrase) == str
+        params = {
+            "name": name,
+            "passphrase": passphrase,
+            "sign": sign,
+            "broadcast": broadcast,
+        }
+        r = self.request.post("redeem", params)
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def send_update(
+        self,
+        name: str,
+        sign: bool,
+        broadcast: bool,
+        value: str,
+        key: str = "txt",
+        type_: str = "TXT",
+        passphrase: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Create, sign, and send an UPDATE. This transaction updates the resource data associated with a given name.
+        type_: DNS record type
+        """
+        assert type(name) == str
+        assert type(sign) == bool
+        assert type(broadcast) == bool
+        assert type(key) == str
+        assert type(value) == str
+        assert type(type_) == str
+        assert passphrase is None or type(passphrase) == str
+        params = {
+            "name": name,
+            "passphrase": "pass",
+            "sign": sign,
+            "broadcast": broadcast,
+            "data": {"records": [{"type": type_, key: [value]}]}
+        }
+        r = self.request.post("update", params)
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def send_renew(
+        self,
+        name: str,
+        sign: bool,
+        broadcast: bool,
+        passphrase: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Create, sign, and send a RENEW.
+        """
+        assert type(name) == str
+        assert type(sign) == bool
+        assert type(broadcast) == bool
+        assert passphrase is None or type(passphrase) == str
+        params = {
+            "name": name,
+            "passphrase": passphrase,
+            "sign": sign,
+            "broadcast": broadcast,
+        }
+        r = self.request.post("renew", params)
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def send_transfer(
+        self,
+        name: str,
+        sign: bool,
+        broadcast: bool,
+        address: str,
+        passphrase: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Create, sign, and send a TRANSFER.
+        """
+        assert type(name) == str
+        assert type(sign) == bool
+        assert type(broadcast) == bool
+        assert type(address) == str
+        assert passphrase is None or type(passphrase) == str
+        params = {
+            "name": name,
+            "passphrase": passphrase,
+            "sign": sign,
+            "broadcast": broadcast,
+            "address": address
+        }
+        r = self.request.post("transfer", params)
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def cancel_transfer(
+        self,
+        name: str,
+        sign: bool,
+        broadcast: bool,
+        passphrase: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Create, sign, and send a transaction that cancels a TRANSFER.
+        This transaction is not a unique covenant type, but spends from a TRANSFER to an UPDATE covenant (with an empty resource object) in order to cancel a transfer already in progress.
+        """
+        assert type(name) == str
+        assert type(sign) == bool
+        assert type(broadcast) == bool
+        assert passphrase is None or type(passphrase) == str
+        params = {
+            "name": name,
+            "passphrase": passphrase,
+            "sign": sign,
+            "broadcast": broadcast,
+        }
+        r = self.request.post("cancel", params)
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def send_finalize(
+        self,
+        name: str,
+        sign: bool,
+        broadcast: bool,
+        passphrase: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Create, sign, and send a FINALIZE.
+        """
+        assert type(name) == str
+        assert type(sign) == bool
+        assert type(broadcast) == bool
+        assert passphrase is None or type(passphrase) == str
+        params = {
+            "name": name,
+            "passphrase": passphrase,
+            "sign": sign,
+            "broadcast": broadcast,
+        }
+        r = self.request.post("finalize", params)
+        result = cast(Dict[str, Any], r)
+        return result
+
+    def send_revoke(
+        self,
+        name: str,
+        sign: bool,
+        broadcast: bool,
+        passphrase: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Create, sign, and send a REVOKE.
+        """
+        assert type(name) == str
+        assert type(sign) == bool
+        assert type(broadcast) == bool
+        assert passphrase is None or type(passphrase) == str
+        params = {
+            "name": name,
+            "passphrase": passphrase,
+            "sign": sign,
+            "broadcast": broadcast,
+        }
+        r = self.request.post("revoke", params)
+        result = cast(Dict[str, Any], r)
         return result
 
 
