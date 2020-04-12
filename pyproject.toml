@@ -9,6 +9,8 @@ license = "MIT"
 python = "^3.8"
 requests = "^2.23.0"
 python-bitcoinrpc = "^1.0"
+python-socketio = "^4.5.1"
+aiohttp = "^3.6.2"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.770"
