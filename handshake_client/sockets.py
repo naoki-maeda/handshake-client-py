@@ -1,32 +1,48 @@
+import logging
 import socketio
-import asyncio
-from handshake_client.utils import get_logger
-
-sio = socketio.AsyncClient()
-logger = get_logger()
+from typing import List
+from dataclasses import asdict
+from handshake_client.chain import ChainEntry
 
 
-async def create_connection(url: str) -> socketio.AsyncClient:
+logger = logging.getLogger("handshake.socket")
+sio = socketio.AsyncClient(logger=logger)
+
+
+async def get_connection(
+    url: str, api_key: str, watch_chain: bool = True
+) -> socketio.AsyncClient:
+    """
+    see https://hsd-dev.org/guides/events.html
+    """
     assert type(url) == str
-    logger.info("get_connection start")
+    assert type(api_key) == str
+    assert type(watch_chain) == bool
     if sio.connected is False:
-        logger.info("connected false")
-        await sio.connect(url)
+        await sio.connect(url, transports=["websocket"])
+        await sio.call("auth", api_key)
+        if watch_chain:
+            await sio.call("watch chain")
     return sio
 
 
 @sio.event
-async def block(data):
-    logger.info(data)
+async def disconnect() -> None:
+    logger.info("closing socket connection")
+    if sio.connected:
+        await sio.disconnect()
 
 
-@sio.on('block')
-def on_block(message):
-    logger.info(message)
+@sio.on("chain connect")
+async def chain_connect(raw_data: bytes):
+    chain_entry = ChainEntry.from_raw(raw_data)
+    logger.info(asdict(chain_entry))
 
 
-if __name__ == "__main__":
-    url = "http://x:password@localhost:14037"
-    asyncio.ensure_future(create_connection(url))
-    asyncio.get_event_loop().run_forever()
-    sio.disconnect()
+@sio.on("block connect")
+async def block_connect(raw_data: bytes, block: List):
+    """
+    TODO: block typing: List[Tx]
+    """
+    chain_entry = ChainEntry.from_raw(raw_data)
+    logger.info(asdict(chain_entry))
