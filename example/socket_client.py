@@ -7,8 +7,9 @@ from handshake_client.chain import ChainEntry
 
 async def main():
     logger = logging.getLogger()
+    # network regtest
     url = "http://localhost:14037"
-    api_key = "your-api-key"
+    api_key = "YOUR API KEY"
     sio = await get_connection(url, api_key)
     tip = await sio.call("get tip")
     tip_data = ChainEntry.from_raw(tip[1])
