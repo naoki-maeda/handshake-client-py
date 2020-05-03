@@ -12,34 +12,34 @@ class Request:
         self.endpoint = endpoint
         self.timeout = timeout
 
-    def get(self, path: str) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+    def get(self, path: str) -> Any:
         assert type(path) == str
         return self.try_request("GET", path)
 
     def post(
         self, path: str, params: Dict[str, Any]
-    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+    ) -> Any:
         assert type(path) == str
         assert type(params) == dict
         return self.try_request("POST", path, params)
 
     def put(
         self, path: str, params: Dict[str, Any]
-    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+    ) -> Any:
         assert type(path) == str
         assert type(params) == dict
         return self.try_request("PUT", path, params)
 
     def delete(
         self, path: str, params: Dict[str, Any]
-    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+    ) -> Any:
         assert type(path) == str
         assert type(params) == dict
         return self.try_request("DELETE", path, params)
 
     def try_request(
         self, method: str, path: str, params: Optional[Dict[str, Any]] = None
-    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+    ) -> Any:
         assert type(method) == str
         assert method in ["GET", "POST", "PUT", "DELETE"]
         assert type(path) == str
@@ -314,7 +314,6 @@ class WalletHttpClient:
         assert passphrase is None or type(passphrase) == str
         assert rate is None or type(rate) == int
         params = {"outputs": outputs, "passphrase": passphrase, "rate": rate}
-        # TODO params多すぎるので一旦updateで対応してる
         params.update(kwargs)
         r = self.request.post("send", params)
         result = cast(Dict[str, Any], r)
@@ -336,7 +335,6 @@ class WalletHttpClient:
         assert passphrase is None or type(passphrase) == str
         assert rate is None or type(rate) == int
         params = {"outputs": outputs, "passphrase": passphrase, "rate": rate}
-        # TODO params多すぎるので一旦updateで対応してる
         params.update(kwargs)
         r = self.request.post("create", params)
         result = cast(Dict[str, Any], r)

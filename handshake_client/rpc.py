@@ -204,12 +204,10 @@ class RpcClient:
         return self.rpc_call("prioritisetransaction", tx_hash, priority_delta, fee_delta)
 
     def estimatefee(self, n_blocks: int = 1) -> int:
-        # TODO 返り値Decimalかfloatかも
         assert type(n_blocks) == int
         return self.rpc_call("estimatefee", n_blocks)
 
     def estimatepriority(self, n_blocks: int = 1) -> int:
-        # TODO 返り値Decimalかfloatかも
         assert type(n_blocks) == int
         return self.rpc_call("estimatepriority", n_blocks)
 
