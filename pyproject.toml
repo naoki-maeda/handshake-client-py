@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "handshake-client"
-version = "0.1.0"
+version = "0.0.0" # using poetry-dynamic-versioning
 description = "Handshake API client by Python"
 authors = ["naoki-maeda"]
 license = "MIT"
@@ -20,3 +20,7 @@ black = {version = "^19.10b0", allow-prereleases = true}
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+style = "pep440"
