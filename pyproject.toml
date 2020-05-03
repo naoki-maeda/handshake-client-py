@@ -6,7 +6,7 @@ authors = ["naoki-maeda"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
 requests = "^2.23.0"
 python-bitcoinrpc = "^1.0"
 python-socketio = {extras = ["client"], version = "^4.5.1"}
@@ -16,11 +16,14 @@ aiohttp = "^3.6.2"
 mypy = "^0.770"
 flake8 = "^3.7.9"
 black = {version = "^19.10b0", allow-prereleases = true}
+poetry = "^1.0.5"
+poetry-dynamic-versioning = "^0.6.0"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+style = "pep440"
 
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
-[tool.poetry-dynamic-versioning]
-enable = true
-style = "pep440"
